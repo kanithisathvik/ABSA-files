@@ -1,4 +1,5 @@
 {
+  "name": "absa-platform",
   "version": 2,
   "builds": [
     {
