@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ABSA Analysis Results</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        :root {
+            --bg: #0f1724;
+            --card: rgba(255,255,255,0.03);
+            --muted: #a7b6c8;
+            --accent: #0ea5a4;
+            --positive: #00CC96;
+            --negative: #EF553B;
+            --neutral: #636EFA;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial;
+            margin: 0;
+            padding: 24px;
+            background: var(--bg);
+            color: #e6eef8;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: linear-gradient(180deg, var(--card), rgba(255,255,255,0.01));
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 6px 30px rgba(2,6,23,0.6);
+        }
+        
+        h1 {
+            color: var(--accent);
+            text-align: center;
+            margin: 0 0 24px 0;
+            font-size: 28px;
+        }
+        
+        .input-form {
+            margin-bottom: 30px;
+            padding: 24px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #e6eef8;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            font-size: 14px;
+            background: rgba(0,0,0,0.4);
+            color: #e6eef8;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        
+        button {
+            background: var(--accent);
+            color: #072;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.2s;
+            width: 100%;
+            margin-top: 12px;
+        }
+        
+        button:hover:not(:disabled) {
+            background: #0bb8b7;
+            transform: translateY(-1px);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .error-message {
+            background: rgba(239, 85, 59, 0.15);
+            color: var(--negative);
+            padding: 16px;
+            margin: 16px 0;
+            border: 1px solid rgba(239, 85, 59, 0.3);
+            border-radius: 8px;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 16px;
+            font-style: italic;
+            color: var(--accent);
+            background: rgba(14, 165, 164, 0.15);
+            border: 1px solid rgba(14, 165, 164, 0.3);
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+        
+        .chart-container {
+            margin: 30px 0;
+            padding: 24px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .results-section {
+            margin-top: 30px;
+        }
+        
+        .results-section h3 {
+            color: var(--accent);
+            margin-bottom: 16px;
+            font-size: 20px;
+        }
+        
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .results-table th,
+        .results-table td {
+            padding: 14px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .results-table th {
+            background: rgba(255,255,255,0.05);
+            font-weight: 600;
+            color: var(--accent);
+        }
+        
+        .results-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .aspect-positive { 
+            color: var(--positive);
+            font-weight: 600;
+        }
+        
+        .aspect-negative { 
+            color: var(--negative);
+            font-weight: 600;
+        }
+        
+        .aspect-neutral { 
+            color: var(--neutral);
+            font-weight: 600;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-top: 24px;
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.05);
+            color: var(--accent);
+            text-decoration: none;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.2s;
+        }
+        
+        .back-link:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Aspect-Based Sentiment Analysis</h1>
+        
+        <div class="input-form">
+            <form id="analysisForm" method="post" action="/analyze">
+                <div>
+                    <label for="review"><strong>📝 Enter your review:</strong></label>
+                    <textarea id="review" name="review" rows="5" placeholder="Type your review here...">{{ review if review else "" }}</textarea>
+                </div>
+                <div>
+                    <label for="aspects"><strong>🏷️ Enter aspects (comma-separated):</strong></label>
+                    <textarea id="aspects" name="aspects" rows="2" placeholder="e.g., battery, camera, display, performance, price">{{ aspects if aspects else "" }}</textarea>
+                </div>
+                <button type="submit" id="submitBtn">🔍 Analyze Review</button>
+            </form>
+            
+            {% if error %}
+            <div class="error-message">
+                ❌ {{ error }}
+            </div>
+            {% endif %}
+            
+            <div id="loading" class="loading">
+                ⌛ Analyzing review... Please wait...
+            </div>
+        </div>
+
+        {% if results %}
+        <div class="results-section">
+            <h3>📊 Visualizations</h3>
+            
+            <div class="chart-container">
+                <div id="barChart"></div>
+            </div>
+            
+            <div class="chart-container">
+                <div id="radarChart"></div>
+            </div>
+            
+            <div class="chart-container">
+                <div id="pieChart"></div>
+            </div>
+
+            <h3>📋 Detailed Results</h3>
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>Aspect</th>
+                        <th>Sentiment</th>
+                        <th>Score (1-10)</th>
+                        <th>Confidence</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in results %}
+                    <tr>
+                        <td><strong>{{ result.Aspect }}</strong></td>
+                        <td class="aspect-{{ result.Sentiment|lower }}">{{ result.Sentiment }}</td>
+                        <td>{{ result['Score (1-10)'] }}</td>
+                        <td>{{ result['Confidence (%)'] }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+        
+        <a href="/" class="back-link">← Back to Home</a>
+    </div>
+
+    <script>
+        // Handle form submission
+        document.getElementById('analysisForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const review = document.getElementById('review').value;
+            const aspects = document.getElementById('aspects').value;
+            const submitBtn = document.getElementById('submitBtn');
+            const loading = document.getElementById('loading');
+            
+            if (!review.trim() || !aspects.trim()) {
+                alert('Please provide both review and aspects');
+                return;
+            }
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            loading.style.display = 'block';
+            
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ review, aspects })
+                });
+                
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('text/html')) {
+                    const html = await response.text();
+                    document.documentElement.innerHTML = html;
+                } else {
+                    const data = await response.json();
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Unknown error occurred');
+                    }
+                    // Reload to show results
+                    location.reload();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error: ' + error.message);
+            } finally {
+                submitBtn.disabled = false;
+                loading.style.display = 'none';
+            }
+        });
+
+        // Render Plotly charts if data exists
+        {% if bar_chart %}
+        try {
+            // Bar Chart with dark theme
+            var barData = {{ bar_chart|safe }};
+            if (barData && barData.data) {
+                barData.layout = barData.layout || {};
+                barData.layout.paper_bgcolor = 'rgba(0,0,0,0)';
+                barData.layout.plot_bgcolor = 'rgba(0,0,0,0)';
+                barData.layout.font = { color: '#e6eef8' };
+                barData.layout.xaxis = barData.layout.xaxis || {};
+                barData.layout.xaxis.gridcolor = 'rgba(255,255,255,0.1)';
+                barData.layout.yaxis = barData.layout.yaxis || {};
+                barData.layout.yaxis.gridcolor = 'rgba(255,255,255,0.1)';
+                Plotly.newPlot('barChart', barData.data, barData.layout, { responsive: true });
+            }
+        } catch (e) {
+            console.error('Error rendering bar chart:', e);
+        }
+        {% endif %}
+
+        {% if radar_chart %}
+        try {
+            // Radar Chart with dark theme
+            var radarData = {{ radar_chart|safe }};
+            if (radarData && radarData.data) {
+                radarData.layout = radarData.layout || {};
+                radarData.layout.paper_bgcolor = 'rgba(0,0,0,0)';
+                radarData.layout.plot_bgcolor = 'rgba(0,0,0,0)';
+                radarData.layout.font = { color: '#e6eef8' };
+                if (radarData.layout.polar) {
+                    radarData.layout.polar.bgcolor = 'rgba(0,0,0,0)';
+                    radarData.layout.polar.radialaxis = radarData.layout.polar.radialaxis || {};
+                    radarData.layout.polar.radialaxis.gridcolor = 'rgba(255,255,255,0.1)';
+                    radarData.layout.polar.angularaxis = radarData.layout.polar.angularaxis || {};
+                    radarData.layout.polar.angularaxis.gridcolor = 'rgba(255,255,255,0.1)';
+                }
+                Plotly.newPlot('radarChart', radarData.data, radarData.layout, { responsive: true });
+            }
+        } catch (e) {
+            console.error('Error rendering radar chart:', e);
+        }
+        {% endif %}
+
+        {% if pie_chart %}
+        try {
+            // Pie Chart with dark theme
+            var pieData = {{ pie_chart|safe }};
+            if (pieData && pieData.data) {
+                pieData.layout = pieData.layout || {};
+                pieData.layout.paper_bgcolor = 'rgba(0,0,0,0)';
+                pieData.layout.plot_bgcolor = 'rgba(0,0,0,0)';
+                pieData.layout.font = { color: '#e6eef8' };
+                Plotly.newPlot('pieChart', pieData.data, pieData.layout, { responsive: true });
+            }
+        } catch (e) {
+            console.error('Error rendering pie chart:', e);
+        }
+        {% endif %}
+    </script>
+</body>
+</html>

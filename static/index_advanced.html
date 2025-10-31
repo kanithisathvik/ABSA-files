@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced ABSA - Aspect-Based Sentiment Analysis</title>
+    <link rel="stylesheet" href="/static/styles_advanced.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-2.26.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <h1 class="logo">
+                    <span class="logo-icon">📊</span>
+                    Advanced ABSA
+                </h1>
+                <p class="subtitle">Aspect-Based Sentiment Analysis Platform</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Tab Navigation -->
+            <nav class="tabs">
+                <button class="tab active" data-tab="single">
+                    <span class="tab-icon">📝</span>
+                    Single Analysis
+                </button>
+                <button class="tab" data-tab="batch">
+                    <span class="tab-icon">📁</span>
+                    Batch Processing
+                </button>
+                <button class="tab" data-tab="compare">
+                    <span class="tab-icon">⚖️</span>
+                    Compare Reviews
+                </button>
+                <button class="tab" data-tab="insights">
+                    <span class="tab-icon">💡</span>
+                    Insights
+                </button>
+            </nav>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Single Analysis Tab -->
+                <div id="single-tab" class="tab-pane active">
+                    <div class="input-section">
+                        <div class="card">
+                            <h2 class="card-title">Analyze Customer Review</h2>
+                            
+                            <!-- Product Category Selection -->
+                            <div class="form-group">
+                                <label for="productCategory">Product Category</label>
+                                <select id="productCategory" class="form-select">
+                                    <option value="general">General</option>
+                                    <option value="smartphones">Smartphones</option>
+                                    <option value="laptops">Laptops</option>
+                                    <option value="tablets">Tablets</option>
+                                    <option value="smartwatches">Smartwatches</option>
+                                    <option value="headphones">Headphones</option>
+                                    <option value="cameras">Cameras</option>
+                                    <option value="televisions">Televisions</option>
+                                    <option value="gaming_consoles">Gaming Consoles</option>
+                                    <option value="smart_speakers">Smart Speakers</option>
+                                    <option value="routers">Routers</option>
+                                    <option value="printers">Printers</option>
+                                    <option value="monitors">Monitors</option>
+                                    <option value="keyboards">Keyboards</option>
+                                    <option value="mice">Mice</option>
+                                </select>
+                            </div>
+
+                            <!-- Review Input -->
+                            <div class="form-group">
+                                <label for="reviewText">Customer Review</label>
+                                <textarea 
+                                    id="reviewText" 
+                                    class="form-textarea" 
+                                    rows="6" 
+                                    placeholder="Enter the customer review here... (e.g., 'The camera quality is excellent but the battery life is disappointing.')"
+                                ></textarea>
+                            </div>
+
+                            <!-- Aspects Input (Optional) -->
+                            <div class="form-group">
+                                <label for="aspectsInput">Specific Aspects (Optional)</label>
+                                <input 
+                                    type="text" 
+                                    id="aspectsInput" 
+                                    class="form-input" 
+                                    placeholder="Leave empty for auto-detection or enter comma-separated aspects (e.g., camera, battery, screen)"
+                                >
+                                <small class="form-hint">If left empty, the system will automatically detect relevant aspects based on the selected category.</small>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="button-group">
+                                <button id="analyzeBtn" class="btn btn-primary">
+                                    <span class="btn-icon">🔍</span>
+                                    Analyze Review
+                                </button>
+                                <button id="clearBtn" class="btn btn-secondary">
+                                    <span class="btn-icon">🗑️</span>
+                                    Clear
+                                </button>
+                                <button id="exampleBtn" class="btn btn-secondary">
+                                    <span class="btn-icon">✨</span>
+                                    Load Example
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Results Section -->
+                    <div id="resultsSection" class="results-section" style="display: none;">
+                        <!-- Summary Cards -->
+                        <div class="summary-cards">
+                            <div class="summary-card">
+                                <div class="summary-icon">📈</div>
+                                <div class="summary-content">
+                                    <h3 class="summary-title">Average Score</h3>
+                                    <p id="avgScore" class="summary-value">-</p>
+                                </div>
+                            </div>
+                            <div class="summary-card positive">
+                                <div class="summary-icon">😊</div>
+                                <div class="summary-content">
+                                    <h3 class="summary-title">Positive</h3>
+                                    <p id="positiveCount" class="summary-value">0</p>
+                                </div>
+                            </div>
+                            <div class="summary-card neutral">
+                                <div class="summary-icon">😐</div>
+                                <div class="summary-content">
+                                    <h3 class="summary-title">Neutral</h3>
+                                    <p id="neutralCount" class="summary-value">0</p>
+                                </div>
+                            </div>
+                            <div class="summary-card negative">
+                                <div class="summary-icon">😞</div>
+                                <div class="summary-content">
+                                    <h3 class="summary-title">Negative</h3>
+                                    <p id="negativeCount" class="summary-value">0</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Charts Section -->
+                        <div class="charts-grid">
+                            <div class="card chart-card">
+                                <h3 class="card-title">Sentiment Scores</h3>
+                                <div id="barChart" class="chart-container"></div>
+                            </div>
+                            <div class="card chart-card">
+                                <h3 class="card-title">Sentiment Profile</h3>
+                                <div id="radarChart" class="chart-container"></div>
+                            </div>
+                            <div class="card chart-card">
+                                <h3 class="card-title">Distribution</h3>
+                                <div id="pieChart" class="chart-container"></div>
+                            </div>
+                            <div class="card chart-card">
+                                <h3 class="card-title">Probability Heatmap</h3>
+                                <div id="heatmapChart" class="chart-container"></div>
+                            </div>
+                        </div>
+
+                        <!-- Detailed Results Table -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Detailed Analysis Results</h3>
+                                <div class="button-group">
+                                    <button id="exportJsonBtn" class="btn btn-small btn-secondary">
+                                        <span class="btn-icon">📥</span>
+                                        Export JSON
+                                    </button>
+                                    <button id="exportCsvBtn" class="btn btn-small btn-secondary">
+                                        <span class="btn-icon">📊</span>
+                                        Export CSV
+                                    </button>
+                                    <button id="copyBtn" class="btn btn-small btn-secondary">
+                                        <span class="btn-icon">📋</span>
+                                        Copy
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="table-container">
+                                <table id="resultsTable" class="results-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Aspect</th>
+                                            <th>Sentiment</th>
+                                            <th>Score</th>
+                                            <th>Confidence</th>
+                                            <th>Probabilities</th>
+                                            <th>Reasoning</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="resultsTableBody">
+                                        <!-- Results will be populated here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Batch Processing Tab -->
+                <div id="batch-tab" class="tab-pane">
+                    <div class="card">
+                        <h2 class="card-title">Batch Processing</h2>
+                        <p class="card-description">Upload a CSV file with multiple reviews for batch analysis.</p>
+                        
+                        <div class="upload-area" id="uploadArea">
+                            <div class="upload-icon">📁</div>
+                            <p class="upload-text">Drop CSV file here or click to browse</p>
+                            <input type="file" id="fileInput" accept=".csv" style="display: none;">
+                            <button id="browseBtn" class="btn btn-primary">
+                                <span class="btn-icon">📂</span>
+                                Browse Files
+                            </button>
+                        </div>
+
+                        <div id="batchResults" class="batch-results" style="display: none;">
+                            <h3 class="section-title">Batch Results</h3>
+                            <div id="batchProgress" class="progress-bar">
+                                <div id="batchProgressFill" class="progress-fill"></div>
+                            </div>
+                            <p id="batchStatus" class="batch-status">Processing...</p>
+                            <div id="batchResultsContent"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Compare Reviews Tab -->
+                <div id="compare-tab" class="tab-pane">
+                    <div class="card">
+                        <h2 class="card-title">Compare Multiple Reviews</h2>
+                        <p class="card-description">Compare sentiment analysis across different reviews side by side.</p>
+                        
+                        <div class="compare-grid">
+                            <div class="compare-item">
+                                <label>Review A</label>
+                                <textarea class="form-textarea" id="reviewA" rows="4" placeholder="Enter first review..."></textarea>
+                            </div>
+                            <div class="compare-item">
+                                <label>Review B</label>
+                                <textarea class="form-textarea" id="reviewB" rows="4" placeholder="Enter second review..."></textarea>
+                            </div>
+                        </div>
+
+                        <button id="compareBtn" class="btn btn-primary">
+                            <span class="btn-icon">⚖️</span>
+                            Compare Reviews
+                        </button>
+
+                        <div id="compareResults" class="compare-results" style="display: none;">
+                            <h3 class="section-title">Comparison Results</h3>
+                            <div id="compareCharts" class="charts-grid"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Insights Tab -->
+                <div id="insights-tab" class="tab-pane">
+                    <div class="card">
+                        <h2 class="card-title">Analysis History & Insights</h2>
+                        <p class="card-description">View your analysis history and gain insights from past reviews.</p>
+                        
+                        <div class="button-group">
+                            <button id="clearHistoryBtn" class="btn btn-secondary">
+                                <span class="btn-icon">🗑️</span>
+                                Clear History
+                            </button>
+                            <button id="exportHistoryBtn" class="btn btn-secondary">
+                                <span class="btn-icon">📥</span>
+                                Export History
+                            </button>
+                        </div>
+
+                        <div id="historySection" class="history-section">
+                            <h3 class="section-title">Recent Analyses</h3>
+                            <div id="historyList" class="history-list">
+                                <!-- History items will be populated here -->
+                            </div>
+                        </div>
+
+                        <div id="insightsCharts" class="charts-grid">
+                            <!-- Insight charts will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p class="loading-text">Analyzing review...</p>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast" style="display: none;">
+        <span id="toastMessage"></span>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Advanced ABSA Platform. Powered by AI Sentiment Analysis.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="/static/app_advanced.js"></script>
+</body>
+</html>

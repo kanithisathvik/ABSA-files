@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "app_final.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "15mb"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "app_final.py"
+    }
+  ],
+  "env": {
+    "TRANSFORMERS_CACHE": "/tmp/transformers_cache",
+    "HF_HOME": "/tmp/huggingface",
+    "PYTHONUNBUFFERED": "1"
+  }
+}
