@@ -1,1 +1,1 @@
-web: uvicorn app_final:app --host 0.0.0.0 --port $PORT --workers 1
+Error: Project names can be up to 100 characters long and must be lowercase. They can include letters, digits, and the following characters: '.', '_', '-'. However, they cannotweb: uvicorn app_final:app --host 0.0.0.0 --port $PORT --workers 1
